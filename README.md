@@ -43,3 +43,13 @@ A powerful, distraction-free environment for creating and visualizing **Mermaid.
    npm run dev
    ```
 3. Open http://localhost:3001 to start creating diagrams.
+
+## Run with Docker
+
+**Prerequisites:** Docker and Docker Compose installed.
+
+1. Build and run the container:
+   ```bash
+   docker-compose up --build
+   ```
+2. Open http://localhost:3001 to start creating diagrams.
