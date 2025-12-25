@@ -3,7 +3,8 @@ import LZString from 'lz-string';
 export const getShareLink = (code: string): string => {
     try {
         const compressed = LZString.compressToEncodedURIComponent(code);
-        return `${window.location.origin}/#${compressed}`;
+        const baseUrl = window.location.origin + window.location.pathname;
+        return `${baseUrl}#${compressed}`;
     } catch (error) {
         console.error('Failed to generate share link:', error);
         return window.location.href;
