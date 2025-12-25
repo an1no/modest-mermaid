@@ -1,0 +1,5 @@
+{
+  "name": "Mermaid Live Viewer",
+  "description": "A minimalistic, client-side Mermaid.js diagram editor and viewer with real-time validation, zooming, and export capabilities.",
+  "requestFramePermissions": []
+}

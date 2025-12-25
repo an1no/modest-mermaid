@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mermaid Live Viewer & Editor - Create Diagrams Online</title>
+  <meta name="description"
+    content="A powerful, free online editor for Mermaid.js diagrams. Create flowcharts, state diagrams, and charts with real-time preview, shareable links, and history snapshots." />
+  <meta name="keywords"
+    content="mermaid.js, mermaid editor, flowchart maker, diagram tool, sequence diagram, gantt chart, online visualization" />
+  <meta name="author" content="Modest Mermaid" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mermaid-live-editor.vercel.app/" />
+  <meta property="og:title" content="Mermaid Live Viewer & Editor - Create Diagrams Online" />
+  <meta property="og:description"
+    content="A powerful, free online editor for Mermaid.js diagrams. Create flowcharts, state diagrams, and charts with real-time preview, shareable links, and history snapshots." />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://mermaid-live-editor.vercel.app/" />
+  <meta property="twitter:title" content="Mermaid Live Viewer & Editor - Create Diagrams Online" />
+  <meta property="twitter:description"
+    content="A powerful, free online editor for Mermaid.js diagrams. Create flowcharts, state diagrams, and charts with real-time preview, shareable links, and history snapshots." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for a cleaner look */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Dot pattern background for the viewer */
+    .bg-dot-pattern {
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "mermaid": "https://esm.sh/mermaid@^11.12.2",
+    "react-zoom-pan-pinch": "https://esm.sh/react-zoom-pan-pinch@^3.7.0"
+  }
+}
+</script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 h-screen w-screen overflow-hidden">
+  <div id="root" class="h-full w-full"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
