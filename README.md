@@ -4,6 +4,8 @@
 
 A powerful, distraction-free environment for creating and visualizing **Mermaid.js** diagrams. Built with React and designed for speed and aesthetics.
 
+🚀 **Live Demo:** [https://an1no.github.io/modest-mermaid/](https://an1no.github.io/modest-mermaid/)
+
 ## Features
 
 - **Real-time Preview**: Type Mermaid code and see diagrams update instantly.
