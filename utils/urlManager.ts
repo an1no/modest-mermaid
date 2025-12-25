@@ -1,9 +1,10 @@
+/// <reference types="vite/client" />
 import LZString from 'lz-string';
 
 export const getShareLink = (code: string): string => {
     try {
         const compressed = LZString.compressToEncodedURIComponent(code);
-        const baseUrl = window.location.origin + window.location.pathname;
+        const baseUrl = window.location.origin + import.meta.env.BASE_URL;
         return `${baseUrl}#${compressed}`;
     } catch (error) {
         console.error('Failed to generate share link:', error);
