@@ -123,20 +123,24 @@ const App: React.FC = () => {
       </div>
 
       {/* Editor Pane */}
-      <div className={`w-full md:w-1/2 lg:w-2/5 h-1/2 md:h-full border-b md:border-b-0 md:border-r ${activeTheme.ui.borderColor} shadow-xl z-20`}>
-        {/* We need to pass theme specific styles or classes to CodeEditor if we want it to adapt fully without context */}
-        <CodeEditor
-          code={code}
-          onChange={handleCodeChange}
-          error={error}
-          onClear={handleClear}
-          onShare={handleShare}
-          history={history}
-          onRestore={handleCodeChange}
-          // Passing raw classes effectively themes it without deep changes
-          className={`${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`}
-          headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}
-        />
+      <div className={`w-full md:w-1/2 lg:w-2/5 h-1/2 md:h-full border-b md:border-b-0 md:border-r ${activeTheme.ui.borderColor} shadow-xl z-20 flex flex-col`}>
+        <div className="flex-1 min-h-0 relative">
+          <CodeEditor
+            code={code}
+            onChange={handleCodeChange}
+            error={error}
+            onClear={handleClear}
+            onShare={handleShare}
+            history={history}
+            onRestore={handleCodeChange}
+            // Passing raw classes effectively themes it without deep changes
+            className={`${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`}
+            headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}
+          />
+        </div>
+        <div className={`p-2 text-[10px] text-center opacity-50 ${activeTheme.ui.editorBg} ${activeTheme.ui.editorText} border-t ${activeTheme.ui.borderColor}`}>
+          Made by <a href="https://www.linkedin.com/in/anino-zaridze/" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-100 transition-opacity">Anino Zaridze</a>
+        </div>
       </div>
 
       {/* Viewer Pane */}
