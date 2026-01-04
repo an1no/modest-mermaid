@@ -20,16 +20,28 @@ export const useHistory = (currentCode: string) => {
             const saved = localStorage.getItem(HISTORY_KEY);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                // Migration: If old format (no timestamp), convert or filter
-                // Simple check: if item.date exists but not timestamp, we might want to just reset or migrate.
-                // For simplicity, we'll just validate structure or start fresh if invalid.
-                // A robust way is to just map it:
-                const migrated = parsed.map((item: any) => ({
-                    id: item.id,
-                    code: item.code,
-                    timestamp: item.timestamp || item.id, // Fallback to ID if timestamp missing
-                    label: item.label || (item.code.trim().split('\n')[0] || 'Untitled').slice(0, 50)
-                }));
+
+                // Migration & Deduplication
+                const seen = new Set<string>();
+                const migrated: HistoryItem[] = [];
+
+                // Process from newest (assuming array is ordered new->old)
+                for (const item of parsed) {
+                    const code = item.code || '';
+                    const clean = code.trim();
+                    if (!clean) continue;
+
+                    if (seen.has(clean)) continue;
+                    seen.add(clean);
+
+                    migrated.push({
+                        id: item.id,
+                        code: code,
+                        timestamp: item.timestamp || item.id, // Fallback to ID if timestamp missing
+                        label: item.label || (clean.split('\n')[0] || 'Untitled').slice(0, 50)
+                    });
+                }
+
                 setHistory(migrated);
             }
         } catch (error) {
@@ -45,13 +57,13 @@ export const useHistory = (currentCode: string) => {
             setHistory((prev) => {
                 const cleanCode = currentCode.trim();
 
-                // Avoid saving if same as last code (ignoring whitespace differences or exact match)
-                if (prev.length > 0) {
-                    const lastItem = prev[0];
-                    if (lastItem.code.trim() === cleanCode) {
-                        return prev;
-                    }
+                // If the very latest snapshot is identical, do nothing (no need to bump timestamp repeatedly)
+                if (prev.length > 0 && prev[0].code.trim() === cleanCode) {
+                    return prev;
                 }
+
+                // Remove ALL previous instances of this code (move to top behavior)
+                const filtered = prev.filter(item => item.code.trim() !== cleanCode);
 
                 const newItem: HistoryItem = {
                     id: Date.now(),
@@ -60,7 +72,7 @@ export const useHistory = (currentCode: string) => {
                     label: (cleanCode.split('\n')[0] || 'Untitled').slice(0, 50)
                 };
 
-                const newHistory = [newItem, ...prev].slice(0, MAX_SNAPSHOTS);
+                const newHistory = [newItem, ...filtered].slice(0, MAX_SNAPSHOTS);
 
                 localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
                 return newHistory;
