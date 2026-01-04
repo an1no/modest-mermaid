@@ -108,19 +108,34 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                     <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">History Snapshots</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {history.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          onRestore(item.code);
-                          setShowHistory(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 border-b border-slate-700/50 last:border-0 transition-colors flex flex-col gap-0.5"
-                      >
-                        <span className="font-medium text-indigo-400">{item.date}</span>
-                        <span className="font-mono opacity-50 truncate w-full">{item.code.slice(0, 30)}...</span>
-                      </button>
-                    ))}
+                    {history.map((item) => {
+                      const timeAgo = (() => {
+                        const diff = (Date.now() - item.timestamp) / 1000;
+                        if (diff < 60) return 'just now';
+                        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+                        return new Date(item.timestamp).toLocaleDateString();
+                      })();
+
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            onRestore(item.code);
+                            setShowHistory(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 border-b border-slate-700/50 last:border-0 transition-colors flex flex-col gap-1 group"
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <span className="font-semibold text-indigo-400 truncate pr-2">{item.label}</span>
+                            <span className="text-slate-500 text-[10px] whitespace-nowrap">{timeAgo}</span>
+                          </div>
+                          <span className="font-mono opacity-50 truncate w-full text-[10px] group-hover:opacity-75 transition-opacity">
+                            {(item.code.split('\n')[1] || item.code.split('\n')[0] || '').slice(0, 40)}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
