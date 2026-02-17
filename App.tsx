@@ -6,6 +6,7 @@ import { themes, ThemeId } from './themes';
 import { ThemeSelector } from './components/ThemeSelector';
 import { useHistory } from './hooks/useHistory';
 import { getShareLink, loadFromURL } from './utils/urlManager';
+import { getSavedDiagrams, saveDiagram, deleteDiagram, SavedDiagram } from './utils/storage';
 
 // Default example code
 const DEFAULT_CODE = `flowchart TB
@@ -65,19 +66,32 @@ const DEFAULT_CODE = `flowchart TB
 
 const App: React.FC = () => {
   const [code, setCode] = useState<string>(DEFAULT_CODE);
+  const [title, setTitle] = useState<string>('Untitled Diagram');
   const [error, setError] = useState<string | null>(null);
   const [currentThemeId, setCurrentThemeId] = useState<ThemeId>('notion');
+  const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
+  // To track if we are editing an existing saved diagram (optional, for now just save as new or overwrite based on ID?)
+  // For simplicity, let's just generate a new ID on save if not present, but if we loaded one, we might want to update it.
+  // The current requirement doesn't strictly specify "update vs save new", but managing IDs is better.
+  const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
 
   const activeTheme = themes[currentThemeId];
-  const { history } = useHistory(code);
+  // Convert saved diagrams to history items for the editor
+  const historyItems = savedDiagrams.map(d => ({
+    id: d.id,
+    code: d.code,
+    timestamp: d.lastModified,
+    label: d.title
+  })).sort((a, b) => b.timestamp - a.timestamp);
 
   // Handle loading initial code (URL -> LocalStorage -> Default)
   useEffect(() => {
+    // Load saved diagrams on mount
+    setSavedDiagrams(getSavedDiagrams());
+
     const urlCode = loadFromURL();
     if (urlCode) {
       setCode(urlCode);
-      // Clear hash to clean up URL, or keep it. User didn't specify, but keeping might be useful for reloads.
-      // However, usually clean apps remove it or update it. Let's keep it simple.
     } else {
       const savedCode = localStorage.getItem('mermaid-code');
       if (savedCode) {
@@ -101,6 +115,8 @@ const App: React.FC = () => {
 
   const handleClear = () => {
     setCode('');
+    setTitle('Untitled Diagram');
+    setCurrentDiagramId(null);
     localStorage.setItem('mermaid-code', '');
   };
 
@@ -109,6 +125,25 @@ const App: React.FC = () => {
     navigator.clipboard.writeText(link).catch((err) => {
       console.error('Failed to copy link:', err);
     });
+  };
+
+  const handleSave = () => {
+    // Always create a new entry (snapshot)
+    const id = Date.now().toString();
+    saveDiagram({
+      id,
+      title,
+      code
+    });
+    setSavedDiagrams(getSavedDiagrams());
+    // We don't necessarily need to set currentDiagramId if we treat every save as a new snapshot
+    // But keeping it might be useful if we wanted to known the "active" one.
+    // Given the request "save it, then see it in history", treating it as a snapshot log is appropriate.
+    setCurrentDiagramId(id);
+  };
+
+  const handleRestore = (code: string) => {
+    setCode(code);
   };
 
   return (
@@ -126,13 +161,16 @@ const App: React.FC = () => {
       <div className={`w-full md:w-1/2 lg:w-2/5 h-1/2 md:h-full border-b md:border-b-0 md:border-r ${activeTheme.ui.borderColor} shadow-xl z-20 flex flex-col`}>
         <div className="flex-1 min-h-0 relative">
           <CodeEditor
+            title={title}
+            onTitleChange={setTitle}
+            onSave={handleSave}
             code={code}
             onChange={handleCodeChange}
             error={error}
             onClear={handleClear}
             onShare={handleShare}
-            history={history}
-            onRestore={handleCodeChange}
+            history={historyItems}
+            onRestore={handleRestore}
             // Passing raw classes effectively themes it without deep changes
             className={`${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`}
             headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}

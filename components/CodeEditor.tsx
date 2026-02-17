@@ -1,5 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import { AlertCircle, Trash2, History, Link, Check, Clock } from 'lucide-react';
+import { AlertCircle, Trash2, Link, Check, Clock, Save, X } from 'lucide-react';
+import { SavedDiagram } from '../utils/storage';
 import { Tooltip } from './Tooltip';
 import { HistoryItem } from '../hooks/useHistory';
 import Editor from 'react-simple-code-editor';
@@ -19,6 +20,9 @@ interface CodeEditorProps {
   onRestore?: (code: string) => void;
   className?: string; // Additional classes for the editor body
   headerClassName?: string; // Classes for the header
+  title?: string;
+  onTitleChange?: (title: string) => void;
+  onSave?: () => void;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -30,10 +34,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   history = [],
   onRestore,
   className = "bg-slate-900 text-slate-300",
-  headerClassName = "border-b border-slate-800 bg-slate-900"
+  headerClassName = "border-b border-slate-800 bg-slate-900",
+  title,
+  onTitleChange,
+  onSave
 }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
+  const [showSaveTooltip, setShowSaveTooltip] = useState(false);
 
   // Ref changed to DivElement because we wrap the editor in a scrolling div
   const textareaRef = useRef<HTMLDivElement>(null);
@@ -44,6 +52,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       onShare();
       setShowShareTooltip(true);
       setTimeout(() => setShowShareTooltip(false), 2000);
+    }
+  };
+
+  const handleSaveClick = () => {
+    if (onSave) {
+      onSave();
+      setShowSaveTooltip(true);
+      setTimeout(() => setShowSaveTooltip(false), 2000);
     }
   };
 
@@ -87,8 +103,34 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       `}</style>
 
       <div className={`flex-none p-4 flex justify-between items-center ${headerClassName}`}>
-        <h2 className="text-sm font-semibold opacity-90 uppercase tracking-wider">Editor</h2>
+        <div className="flex-1 min-w-0 mr-4">
+          {onTitleChange ? (
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+              className="bg-transparent border-none text-sm font-semibold opacity-90 uppercase tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1 -ml-1 placeholder-white/20"
+              placeholder="UNTITLED DIAGRAM"
+            />
+          ) : (
+            <h2 className="text-sm font-semibold opacity-90 uppercase tracking-wider">Editor</h2>
+          )}
+        </div>
         <div className="flex items-center gap-2">
+
+          {/* Save Button */}
+          {onSave && (
+            <div className="relative">
+              <Tooltip content={showSaveTooltip ? "Saved!" : "Save"} position="bottom">
+                <button
+                  onClick={handleSaveClick}
+                  className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded transition-colors"
+                >
+                  {showSaveTooltip ? <Check size={16} className="text-green-400" /> : <Save size={16} />}
+                </button>
+              </Tooltip>
+            </div>
+          )}
 
           {/* History Button */}
           {history.length > 0 && onRestore && (
