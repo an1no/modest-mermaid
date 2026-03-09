@@ -13,15 +13,6 @@ export const SeoAccordion: React.FC<SeoAccordionProps> = ({ className = '' }) =>
                 </summary>
                 <div className="space-y-3 mt-3 leading-relaxed">
                     <p>
-<<<<<<< Updated upstream
-                        <strong>What is this?</strong> Mermaids.cc is a lightweight, dedicated <strong>Mermaid.js live editor</strong> designed for developers, technical writers, and product managers who need to visualize architecture without friction. Rather than dealing with heavy graphical interfaces, this tool acts as a simple <strong>Markdown to diagram</strong> compiler directly in your browser. Whether you are drafting documentation for a GitHub repository, mapping out microservices, or planning sprint timelines, mermaids.cc provides a clean environment to compile structural code into beautiful visuals instantly. We built this as a fast, accessible <strong>Mermaid syntax previewer</strong> so you can focus on writing logic rather than clicking and dragging shapes.
-                    </p>
-                    <p>
-                        <strong>Supported Diagrams:</strong> The engine parses standard Mermaid syntax, enabling you to generate a wide variety of technical visualizations. Current support includes our highly popular <strong>online sequence diagram generator</strong>, which is perfect for mapping API calls and authentication flows. You can also seamlessly create branching <strong>flowcharts from text</strong>, detailed project management Gantt charts, and complex object-oriented Class diagrams. As the underlying syntax evolves, you can trust our compiler to handle state diagrams, pie charts, and entity-relationship models with the same precision.
-                    </p>
-                    <p>
-                        <strong>Why use this?</strong> We believe technical tooling should be invisible until you need it. Mermaids.cc requires zero configuration and strictly zero logins. The moment you land on the page, the editor is ready. By focusing exclusively on instant live rendering, you eliminate the delay between writing code and seeing the result. The interface is optimized for speed, allowing you to prototype, test your syntax, and export your final architectural models in seconds, completely free.
-=======
                         <strong>What is this?</strong> Mermaids.cc is a free, browser-based <strong>Mermaid.js live editor</strong> built for developers, technical writers, and product managers. It functions as a real-time <strong>Markdown to diagram</strong> compiler — paste or write Mermaid syntax and your diagram renders instantly, with no installation, no account, and no configuration required. The built-in code editor features <strong>Mermaid syntax highlighting</strong> and line numbers, making it a genuinely productive environment for authoring complex diagrams directly in the browser.
                     </p>
                     <p>
@@ -38,7 +29,6 @@ export const SeoAccordion: React.FC<SeoAccordionProps> = ({ className = '' }) =>
                     </p>
                     <p>
                         <strong>Themes:</strong> The interface ships with multiple visual themes, including a clean Notion-style light mode and a developer-focused dark mode. Switching themes also updates the Mermaid diagram rendering style, so your exported diagrams can match your documentation aesthetic.
->>>>>>> Stashed changes
                     </p>
                 </div>
             </details>
