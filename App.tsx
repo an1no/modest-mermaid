@@ -150,8 +150,8 @@ const App: React.FC = () => {
     // Given the request "save it, then see it in history", treating it as a snapshot log is appropriate.
     setCurrentDiagramId(id);
 
-    // Also push a manual snapshot to the visual history
-    forceSave();
+    // Also push a manual snapshot to the visual history (force=true bypasses deduplication)
+    forceSave(code, title, true);
   };
 
   const handleRestore = (code: string, restoredTitle: string) => {
