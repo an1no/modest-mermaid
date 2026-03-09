@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { AlertCircle, Trash2, Link, Check, Clock, Save, X } from 'lucide-react';
 import { SavedDiagram } from '../utils/storage';
 import { Tooltip } from './Tooltip';
@@ -60,13 +60,30 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   };
 
-  const handleSaveClick = () => {
+  const handleSaveClick = useCallback(() => {
     if (onSave) {
       onSave();
       setShowSaveTooltip(true);
       setTimeout(() => setShowSaveTooltip(false), 2000);
     }
-  };
+  }, [onSave]);
+
+  const handleSaveClickRef = useRef(handleSaveClick);
+  useEffect(() => {
+    handleSaveClickRef.current = handleSaveClick;
+  }, [handleSaveClick]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveClickRef.current();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (lastSaved) {
@@ -115,7 +132,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         .prism-editor textarea { outline: none !important; }
       `}</style>
 
-      <div className={`flex-none p-4 flex justify-between items-center ${headerClassName}`}>
+      <div className={`flex-none p-4 pl-16 flex justify-between items-center ${headerClassName}`}>
         <div className="flex-1 min-w-0 mr-4">
           {onTitleChange ? (
             <input
@@ -245,7 +262,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
           <div className="w-px h-4 bg-slate-700 mx-1" />
 
-          <span className="text-xs opacity-60 hidden sm:inline">Mermaid</span>
           {onClear && (
             <Tooltip content="Clear editor" position="left">
               <button

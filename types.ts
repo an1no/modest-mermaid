@@ -15,3 +15,19 @@ export enum ViewMode {
   Code = 'CODE',
   Diagram = 'DIAGRAM'
 }
+
+export interface DiagramFile {
+  id: string;
+  type: 'file';
+  name: string;
+  code: string;
+  folderId: string | null; // null = root level
+  lastModified: number;
+}
+
+export interface DiagramFolder {
+  id: string;
+  type: 'folder';
+  name: string;
+  createdAt: number;
+}

@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CodeEditor } from './components/CodeEditor';
 import { DiagramViewer } from './components/DiagramViewer';
+import { Sidebar } from './components/Sidebar';
 import { Layout } from 'lucide-react';
 import { themes, ThemeId } from './themes';
 import { ThemeSelector } from './components/ThemeSelector';
 import { useHistory } from './hooks/useHistory';
 import { getShareLink, loadFromURL } from './utils/urlManager';
-import { getSavedDiagrams, saveDiagram, deleteDiagram, SavedDiagram } from './utils/storage';
+import {
+  getSavedDiagrams, saveDiagram, deleteDiagram, SavedDiagram,
+  getFolders, getFiles, saveFolder,
+  deleteFolder as storagDeleteFolder,
+  saveFile,
+  deleteFile as storageDeleteFile
+} from './utils/storage';
 import { SeoAccordion } from './components/SeoAccordion';
+import { DiagramFile, DiagramFolder } from './types';
 
 // Default example code
 const DEFAULT_CODE = `flowchart TB
@@ -71,20 +79,22 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentThemeId, setCurrentThemeId] = useState<ThemeId>('notion');
   const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
-  // To track if we are editing an existing saved diagram (optional, for now just save as new or overwrite based on ID?)
-  // For simplicity, let's just generate a new ID on save if not present, but if we loaded one, we might want to update it.
-  // The current requirement doesn't strictly specify "update vs save new", but managing IDs is better.
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState<boolean>(false);
 
+  // ── Folder/File state ──────────────────────────────────────────────────────
+  const [folders, setFolders] = useState<DiagramFolder[]>([]);
+  const [files, setFiles] = useState<DiagramFile[]>([]);
+  const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+
   const activeTheme = themes[currentThemeId];
-  // useHistory hook manages our auto-saved history
   const { history: historyItems, lastSaved, deleteSnapshot, forceSave } = useHistory(code, title, isDirty);
 
-  // Handle loading initial code (URL -> LocalStorage -> Default)
+  // ── Initial load ───────────────────────────────────────────────────────────
   useEffect(() => {
-    // Load saved diagrams on mount
     setSavedDiagrams(getSavedDiagrams());
+    setFolders(getFolders());
+    setFiles(getFiles());
 
     const urlCode = loadFromURL();
     if (urlCode) {
@@ -92,19 +102,28 @@ const App: React.FC = () => {
     } else {
       const savedCode = localStorage.getItem('mermaid-code');
       const savedTitle = localStorage.getItem('mermaid-title');
-      if (savedCode) {
-        setCode(savedCode);
-      }
-      if (savedTitle) {
-        setTitle(savedTitle);
-      }
+      if (savedCode) setCode(savedCode);
+      if (savedTitle) setTitle(savedTitle);
     }
   }, []);
 
+  // ── Editor handlers ────────────────────────────────────────────────────────
   const handleTitleChange = (newTitle: string) => {
     setIsDirty(true);
     setTitle(newTitle);
     localStorage.setItem('mermaid-title', newTitle);
+
+    // If editing a tracked file, persist name change
+    if (currentFileId) {
+      setFiles(prev => {
+        const updated = prev.map(f =>
+          f.id === currentFileId ? { ...f, name: newTitle, lastModified: Date.now() } : f
+        );
+        const file = updated.find(f => f.id === currentFileId);
+        if (file) saveFile(file);
+        return updated;
+      });
+    }
   };
 
   const handleCodeChange = (newCode: string) => {
@@ -113,58 +132,147 @@ const App: React.FC = () => {
     localStorage.setItem('mermaid-code', newCode);
   };
 
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage);
-  };
-
-  const handleSuccess = () => {
-    setError(null);
-  };
+  const handleError = (errorMessage: string) => setError(errorMessage);
+  const handleSuccess = () => setError(null);
 
   const handleClear = () => {
     setCode('');
     setTitle('Untitled Diagram');
     setCurrentDiagramId(null);
+    setCurrentFileId(null);
     localStorage.setItem('mermaid-code', '');
     localStorage.removeItem('mermaid-title');
   };
 
   const handleShare = () => {
     const link = getShareLink(code);
-    navigator.clipboard.writeText(link).catch((err) => {
+    navigator.clipboard.writeText(link).catch(err => {
       console.error('Failed to copy link:', err);
     });
   };
 
   const handleSave = () => {
-    // Always create a new entry (snapshot)
     const id = Date.now().toString();
-    saveDiagram({
-      id,
-      title,
-      code
-    });
+    saveDiagram({ id, title, code });
     setSavedDiagrams(getSavedDiagrams());
-    // We don't necessarily need to set currentDiagramId if we treat every save as a new snapshot
-    // But keeping it might be useful if we wanted to known the "active" one.
-    // Given the request "save it, then see it in history", treating it as a snapshot log is appropriate.
     setCurrentDiagramId(id);
-
-    // Also push a manual snapshot to the visual history (force=true bypasses deduplication)
     forceSave(code, title, true);
+
+    // Also persist to file system if we have a currentFileId
+    if (currentFileId) {
+      setFiles(prev => {
+        const updated = prev.map(f =>
+          f.id === currentFileId ? { ...f, code, name: title, lastModified: Date.now() } : f
+        );
+        const file = updated.find(f => f.id === currentFileId);
+        if (file) saveFile(file);
+        return updated;
+      });
+    }
   };
 
   const handleRestore = (code: string, restoredTitle: string) => {
-    setIsDirty(false); // Do not auto-save just because we restored an old version
+    setIsDirty(false);
     setCode(code);
     setTitle(restoredTitle);
   };
 
+  // ── Sidebar: file operations ──────────────────────────────────────────────
+  const handleLoadFile = useCallback((file: DiagramFile) => {
+    setCode(file.code);
+    setTitle(file.name);
+    setCurrentFileId(file.id);
+    setIsDirty(false);
+    localStorage.setItem('mermaid-code', file.code);
+    localStorage.setItem('mermaid-title', file.name);
+  }, []);
+
+  const handleCreateFile = useCallback((folderId: string | null) => {
+    const newFile: DiagramFile = {
+      id: Date.now().toString(),
+      type: 'file',
+      name: 'Untitled Diagram',
+      code: 'flowchart LR\n    A --> B',
+      folderId,
+      lastModified: Date.now(),
+    };
+    saveFile(newFile);
+    setFiles(getFiles());
+    handleLoadFile(newFile);
+  }, [handleLoadFile]);
+
+  const handleDeleteFile = useCallback((id: string) => {
+    storageDeleteFile(id);
+    setFiles(getFiles());
+    if (currentFileId === id) {
+      setCurrentFileId(null);
+    }
+  }, [currentFileId]);
+
+  const handleRenameFile = useCallback((id: string, newName: string) => {
+    setFiles(prev => {
+      const updated = prev.map(f =>
+        f.id === id ? { ...f, name: newName, lastModified: Date.now() } : f
+      );
+      const file = updated.find(f => f.id === id);
+      if (file) saveFile(file);
+      return updated;
+    });
+    if (currentFileId === id) {
+      setTitle(newName);
+      localStorage.setItem('mermaid-title', newName);
+    }
+  }, [currentFileId]);
+
+  // ── Sidebar: folder operations ────────────────────────────────────────────
+  const handleCreateFolder = useCallback(() => {
+    const newFolder: DiagramFolder = {
+      id: Date.now().toString(),
+      type: 'folder',
+      name: 'New Folder',
+      createdAt: Date.now(),
+    };
+    saveFolder(newFolder);
+    setFolders(getFolders());
+  }, []);
+
+  const handleDeleteFolder = useCallback((id: string) => {
+    storagDeleteFolder(id);
+    setFolders(getFolders());
+    setFiles(getFiles());
+  }, []);
+
+  const handleRenameFolder = useCallback((id: string, newName: string) => {
+    setFolders(prev => {
+      const updated = prev.map(f =>
+        f.id === id ? { ...f, name: newName } : f
+      );
+      const folder = updated.find(f => f.id === id);
+      if (folder) saveFolder(folder);
+      return updated;
+    });
+  }, []);
+
   return (
     <div className={`flex flex-col md:flex-row h-screen w-screen overflow-hidden ${activeTheme.ui.background} ${activeTheme.ui.text}`}>
+
+      {/* ── Sidebar (rendered outside normal flow via fixed positioning) ── */}
+      <Sidebar
+        folders={folders}
+        files={files}
+        currentFileId={currentFileId}
+        onLoadFile={handleLoadFile}
+        onCreateFile={handleCreateFile}
+        onDeleteFile={handleDeleteFile}
+        onRenameFile={handleRenameFile}
+        onCreateFolder={handleCreateFolder}
+        onDeleteFolder={handleDeleteFolder}
+        onRenameFolder={handleRenameFolder}
+      />
+
       {/* Header/Nav for Mobile only */}
       <div className={`md:hidden ${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor} p-3 flex items-center justify-between`}>
-        <h1 className="flex items-center gap-2 font-semibold text-base">
+        <h1 className="flex items-center gap-2 font-semibold text-base ml-10">
           <Layout className={`w-5 h-5 ${activeTheme.ui.accent}`} />
           <span>Mermaid Live</span>
         </h1>
@@ -187,7 +295,6 @@ const App: React.FC = () => {
             onRestore={handleRestore}
             onDeleteSnapshot={deleteSnapshot}
             lastSaved={lastSaved}
-            // Passing raw classes effectively themes it without deep changes
             className={`${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`}
             headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}
           />
