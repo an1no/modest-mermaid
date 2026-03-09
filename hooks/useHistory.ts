@@ -100,23 +100,23 @@ export const useHistory = (currentCode: string, currentTitle: string = 'Untitled
         });
     }, []);
 
-    const forceSave = useCallback(() => {
-        if (!currentCode.trim()) return;
+    const forceSave = useCallback((code: string, title: string) => {
+        if (!code.trim()) return;
 
         setHistory((prev) => {
-            const cleanCode = currentCode.trim();
+            const cleanCode = code.trim();
 
-            if (prev.length > 0 && prev[0].code.trim() === cleanCode && prev[0].label === currentTitle) {
+            if (prev.length > 0 && prev[0].code.trim() === cleanCode && prev[0].label === title) {
                 return prev;
             }
 
-            const filtered = prev.filter(item => !(item.code.trim() === cleanCode && item.label === currentTitle));
+            const filtered = prev.filter(item => !(item.code.trim() === cleanCode && item.label === title));
 
             const newItem: HistoryItem = {
                 id: Date.now(),
-                code: currentCode,
+                code: code,
                 timestamp: Date.now(),
-                label: currentTitle
+                label: title
             };
 
             const newHistory = [newItem, ...filtered].slice(0, MAX_SNAPSHOTS);
@@ -124,7 +124,7 @@ export const useHistory = (currentCode: string, currentTitle: string = 'Untitled
             setTimeout(() => setLastSaved(Date.now()), 0);
             return newHistory;
         });
-    }, [currentCode, currentTitle]);
+    }, []);
 
     return { history, restoreSnapshot, clearHistory, lastSaved, deleteSnapshot, forceSave };
 };
