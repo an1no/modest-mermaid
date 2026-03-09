@@ -7,6 +7,7 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { useHistory } from './hooks/useHistory';
 import { getShareLink, loadFromURL } from './utils/urlManager';
 import { getSavedDiagrams, saveDiagram, deleteDiagram, SavedDiagram } from './utils/storage';
+import { SeoAccordion } from './components/SeoAccordion';
 
 // Default example code
 const DEFAULT_CODE = `flowchart TB
@@ -191,6 +192,9 @@ const App: React.FC = () => {
             headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}
           />
         </div>
+
+        <SeoAccordion className={`${activeTheme.ui.borderColor} ${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`} />
+
         <div className={`p-2 text-[10px] text-center opacity-50 ${activeTheme.ui.editorBg} ${activeTheme.ui.editorText} border-t ${activeTheme.ui.borderColor}`}>
           Made by <a href="https://www.linkedin.com/in/anino-zaridze/" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-100 transition-opacity">Anino Zaridze</a>
         </div>
