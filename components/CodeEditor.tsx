@@ -109,11 +109,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               type="text"
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
-              className="bg-transparent border-none text-sm font-semibold opacity-90 uppercase tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1 -ml-1 placeholder-white/20"
+              className="bg-transparent border-none text-sm font-semibold opacity-90 tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1 -ml-1 placeholder-white/20"
               placeholder="UNTITLED DIAGRAM"
             />
           ) : (
-            <h2 className="text-sm font-semibold opacity-90 uppercase tracking-wider">Editor</h2>
+            <h2 className="text-sm font-semibold opacity-90 tracking-wider">Editor</h2>
           )}
         </div>
         <div className="flex items-center gap-2">
