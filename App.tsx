@@ -74,15 +74,11 @@ const App: React.FC = () => {
   // For simplicity, let's just generate a new ID on save if not present, but if we loaded one, we might want to update it.
   // The current requirement doesn't strictly specify "update vs save new", but managing IDs is better.
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState<boolean>(false);
 
   const activeTheme = themes[currentThemeId];
-  // Convert saved diagrams to history items for the editor
-  const historyItems = savedDiagrams.map(d => ({
-    id: d.id,
-    code: d.code,
-    timestamp: d.lastModified,
-    label: d.title
-  })).sort((a, b) => b.timestamp - a.timestamp);
+  // useHistory hook manages our auto-saved history
+  const { history: historyItems, lastSaved, deleteSnapshot, forceSave } = useHistory(code, title, isDirty);
 
   // Handle loading initial code (URL -> LocalStorage -> Default)
   useEffect(() => {
@@ -94,13 +90,24 @@ const App: React.FC = () => {
       setCode(urlCode);
     } else {
       const savedCode = localStorage.getItem('mermaid-code');
+      const savedTitle = localStorage.getItem('mermaid-title');
       if (savedCode) {
         setCode(savedCode);
+      }
+      if (savedTitle) {
+        setTitle(savedTitle);
       }
     }
   }, []);
 
+  const handleTitleChange = (newTitle: string) => {
+    setIsDirty(true);
+    setTitle(newTitle);
+    localStorage.setItem('mermaid-title', newTitle);
+  };
+
   const handleCodeChange = (newCode: string) => {
+    setIsDirty(true);
     setCode(newCode);
     localStorage.setItem('mermaid-code', newCode);
   };
@@ -118,6 +125,7 @@ const App: React.FC = () => {
     setTitle('Untitled Diagram');
     setCurrentDiagramId(null);
     localStorage.setItem('mermaid-code', '');
+    localStorage.removeItem('mermaid-title');
   };
 
   const handleShare = () => {
@@ -140,10 +148,15 @@ const App: React.FC = () => {
     // But keeping it might be useful if we wanted to known the "active" one.
     // Given the request "save it, then see it in history", treating it as a snapshot log is appropriate.
     setCurrentDiagramId(id);
+
+    // Also push a manual snapshot to the visual history
+    forceSave();
   };
 
-  const handleRestore = (code: string) => {
+  const handleRestore = (code: string, restoredTitle: string) => {
+    setIsDirty(false); // Do not auto-save just because we restored an old version
     setCode(code);
+    setTitle(restoredTitle);
   };
 
   return (
@@ -162,7 +175,7 @@ const App: React.FC = () => {
         <div className="flex-1 min-h-0 relative">
           <CodeEditor
             title={title}
-            onTitleChange={setTitle}
+            onTitleChange={handleTitleChange}
             onSave={handleSave}
             code={code}
             onChange={handleCodeChange}
@@ -171,6 +184,8 @@ const App: React.FC = () => {
             onShare={handleShare}
             history={historyItems}
             onRestore={handleRestore}
+            onDeleteSnapshot={deleteSnapshot}
+            lastSaved={lastSaved}
             // Passing raw classes effectively themes it without deep changes
             className={`${activeTheme.ui.editorBg} ${activeTheme.ui.editorText}`}
             headerClassName={`${activeTheme.ui.headerBg} border-b ${activeTheme.ui.borderColor}`}
