@@ -3,6 +3,7 @@ import { AlertCircle, Trash2, Link, Check, Clock, Save, X } from 'lucide-react';
 import { SavedDiagram } from '../utils/storage';
 import { Tooltip } from './Tooltip';
 import { HistoryItem } from '../hooks/useHistory';
+import { ConfirmDialog } from './ConfirmDialog';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
 import { registerMermaid } from '../utils/mermaid-prism';
@@ -35,8 +36,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onShare,
   history = [],
   onRestore,
-  className = "bg-slate-900 text-slate-300",
-  headerClassName = "border-b border-slate-800 bg-slate-900",
+  className = "bg-[#F7FAFC] text-[#4A5568]",
+  headerClassName = "border-b border-[#FFFFFF] bg-[#F7FAFC]",
   title,
   onTitleChange,
   onSave,
@@ -47,6 +48,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [showShareTooltip, setShowShareTooltip] = useState(false);
   const [showSaveTooltip, setShowSaveTooltip] = useState(false);
   const [showAutoSaveBanner, setShowAutoSaveBanner] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   // Ref changed to DivElement because we wrap the editor in a scrolling div
   const textareaRef = useRef<HTMLDivElement>(null);
@@ -139,7 +141,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               type="text"
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
-              className="bg-transparent border-none text-sm font-semibold opacity-90 tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1 -ml-1 placeholder-white/20"
+              className="bg-transparent border-none text-sm font-semibold opacity-90 tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-[#086788]/50 rounded px-1 -ml-1 placeholder-[#4A5568]/20"
               placeholder="Untitled Diagram"
             />
           ) : (
@@ -154,9 +156,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <Tooltip content={showSaveTooltip ? "Saved!" : "Save"} position="bottom">
                 <button
                   onClick={handleSaveClick}
-                  className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded transition-colors"
+                  className="p-1.5 text-[#4A5568]/60 hover:text-[#07A0C3] hover:bg-[#07A0C3]/10 rounded transition-colors"
                 >
-                  {showSaveTooltip ? <Check size={16} className="text-green-400" /> : <Save size={16} />}
+                  {showSaveTooltip ? <Check size={16} className="text-[#38B000]" /> : <Save size={16} />}
                 </button>
               </Tooltip>
             </div>
@@ -168,7 +170,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <Tooltip content="History" position="bottom">
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded transition-colors"
+                  className="p-1.5 text-[#4A5568]/60 hover:text-[#07A0C3] hover:bg-[#07A0C3]/10 rounded transition-colors"
                 >
                   <Clock size={16} />
                 </button>
@@ -178,17 +180,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               {showHistory && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 transition-opacity" onClick={() => setShowHistory(false)}>
                   <div
-                    className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden w-full max-w-xl max-h-[80vh] flex flex-col"
+                    className="bg-[#F7FAFC] border border-[#FFFFFF] rounded-xl shadow-2xl overflow-hidden w-full max-w-xl max-h-[80vh] flex flex-col"
                     onClick={e => e.stopPropagation()}
                   >
-                    <div className="p-4 border-b border-slate-700 bg-slate-800/50 flex justify-between items-center">
-                      <h3 className="text-sm font-semibold text-slate-200 tracking-wider flex items-center gap-2">
-                        <Clock size={18} className="text-indigo-400" />
+                    <div className="p-4 border-b border-[#FFFFFF] bg-[#FFFFFF]/50 flex justify-between items-center">
+                      <h3 className="text-sm font-semibold text-[#4A5568] tracking-wider flex items-center gap-2">
+                        <Clock size={18} className="text-[#086788]" />
                         Version History
                       </h3>
                       <button
                         onClick={() => setShowHistory(false)}
-                        className="text-slate-400 hover:text-red-400 transition-colors p-1"
+                        className="text-[#4A5568]/60 hover:text-[#EE6055] transition-colors p-1"
                       >
                         <X size={18} />
                       </button>
@@ -202,28 +204,26 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                             const timeStr = new Date(item.timestamp).toLocaleString();
 
                             return (
-                              <div key={item.id} className="w-full text-left p-3 rounded-lg bg-slate-800/50 hover:bg-indigo-900/40 border border-slate-700/50 hover:border-indigo-500/50 transition-all flex flex-col gap-2 group relative">
+                              <div key={item.id} className="w-full text-left p-3 rounded-lg bg-[#FFFFFF]/50 hover:bg-[#07A0C3]/10 border border-[#FFFFFF]/50 hover:border-[#086788]/50 transition-all flex flex-col gap-2 group relative">
                                 <button
                                   onClick={() => {
                                     onRestore(item.code, item.label);
                                     setShowHistory(false);
                                   }}
-                                  className="text-left w-full h-full absolute inset-0 z-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                  className="text-left w-full h-full absolute inset-0 z-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#086788]/50"
                                   aria-label={`Restore version from ${timeStr}`}
                                 />
                                 <div className="flex justify-between items-start w-full gap-4 relative z-10 pointer-events-none">
-                                  <span className="font-semibold text-indigo-300 group-hover:text-indigo-200 truncate">{item.label}</span>
+                                  <span className="font-semibold text-[#086788] group-hover:text-[#38B000] truncate">{item.label}</span>
                                   <div className="flex items-center gap-2 pointer-events-auto">
-                                    <span className="text-slate-400 text-xs whitespace-nowrap bg-slate-900/50 px-2 py-1 rounded">{timeStr}</span>
+                                    <span className="text-[#4A5568]/60 text-xs whitespace-nowrap bg-[#F7FAFC]/50 px-2 py-1 rounded">{timeStr}</span>
                                     {onDeleteSnapshot && (
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          if (confirm('Are you sure you want to delete this version?')) {
-                                            onDeleteSnapshot(item.id);
-                                          }
+                                          setConfirmDeleteId(item.id);
                                         }}
-                                        className="text-slate-500 hover:text-red-400 bg-slate-900/50 hover:bg-red-500/10 p-1 rounded transition-colors"
+                                        className="text-[#4A5568]/50 hover:text-[#EE6055] bg-[#F7FAFC]/50 hover:bg-[#EE6055]/10 p-1 rounded transition-colors"
                                         title="Delete version"
                                       >
                                         <Trash2 size={14} />
@@ -231,7 +231,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                                     )}
                                   </div>
                                 </div>
-                                <div className="font-mono text-xs text-slate-500 group-hover:text-slate-400 truncate w-full relative z-10 pointer-events-none">
+                                <div className="font-mono text-xs text-[#4A5568]/50 group-hover:text-[#4A5568]/80 truncate w-full relative z-10 pointer-events-none">
                                   {(item.code.split('\n')[1] || item.code.split('\n')[0] || '').slice(0, 80)}
                                 </div>
                               </div>
@@ -241,6 +241,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                       )}
                     </div>
                   </div>
+                  <ConfirmDialog
+                    isOpen={confirmDeleteId !== null}
+                    message="Are you sure you want to delete this version?"
+                    onConfirm={() => {
+                      if (confirmDeleteId !== null && onDeleteSnapshot) {
+                        onDeleteSnapshot(confirmDeleteId);
+                      }
+                      setConfirmDeleteId(null);
+                    }}
+                    onCancel={() => setConfirmDeleteId(null)}
+                  />
                 </div>
               )}
             </div>
@@ -252,9 +263,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <Tooltip content={showShareTooltip ? "Copied!" : "Share Link"} position="bottom">
                 <button
                   onClick={handleShareClick}
-                  className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded transition-colors"
+                  className="p-1.5 text-[#4A5568]/60 hover:text-[#07A0C3] hover:bg-[#07A0C3]/10 rounded transition-colors"
                 >
-                  {showShareTooltip ? <Check size={16} className="text-green-400" /> : <Link size={16} />}
+                  {showShareTooltip ? <Check size={16} className="text-[#38B000]" /> : <Link size={16} />}
                 </button>
               </Tooltip>
             </div>
@@ -266,7 +277,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <Tooltip content="Clear editor" position="left">
               <button
                 onClick={onClear}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/20 hover:bg-red-900/30 opacity-70 hover:opacity-100 hover:text-red-400 rounded text-xs font-medium transition-colors border border-transparent hover:border-red-700"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FFFFFF]/40 hover:bg-[#EE6055]/10 opacity-70 hover:opacity-100 hover:text-[#EE6055] rounded text-xs font-medium transition-colors border border-transparent hover:border-[#EE6055]/50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Clear</span>
@@ -312,30 +323,30 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
 
       {showAutoSaveBanner && (
-        <div className="absolute bottom-4 right-4 z-40 bg-green-900/95 border border-green-700 text-green-200 text-xs px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300">
-          <Check className="w-4 h-4 text-green-400" />
+        <div className="absolute bottom-4 right-4 z-40 bg-[#F7FAFC]/95 border border-[#38B000] text-[#38B000] text-xs px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in duration-300">
+          <Check className="w-4 h-4 text-[#38B000]" />
           Auto-saved
         </div>
       )}
 
       {error && (
-        <div className="absolute bottom-0 left-0 right-0 bg-red-900/95 border-t border-red-700 p-3 backdrop-blur-sm transition-all animate-in slide-in-from-bottom-2 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] max-h-[40vh] overflow-y-auto custom-scrollbar">
+        <div className="absolute bottom-0 left-0 right-0 bg-[#EE6055]/20 border-t border-[#EE6055]/40 p-3 backdrop-blur-sm transition-all animate-in slide-in-from-bottom-2 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] max-h-[40vh] overflow-y-auto custom-scrollbar">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-[#EE6055] shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center mb-1">
-                <h3 className="text-red-200 text-xs font-bold uppercase tracking-wide">Syntax Error</h3>
+                <h3 className="text-[#EE6055] text-xs font-bold uppercase tracking-wide">Syntax Error</h3>
                 {onClear && (
                   <button
                     onClick={onClear}
-                    className="flex items-center gap-1.5 px-2 py-1 bg-red-950 hover:bg-red-800 text-red-300 hover:text-red-100 rounded text-[10px] font-medium transition-colors border border-red-800/50"
+                    className="flex items-center gap-1.5 px-2 py-1 bg-[#F7FAFC] hover:bg-[#EE6055]/10 text-[#EE6055] hover:text-[#4A5568] rounded text-[10px] font-medium transition-colors border border-[#EE6055]/30"
                   >
                     <Trash2 className="w-3 h-3" />
                     Clear Editor
                   </button>
                 )}
               </div>
-              <p className="text-red-100 text-xs font-mono whitespace-pre-wrap break-all">{error}</p>
+              <p className="text-[#4A5568]/80 text-xs font-mono whitespace-pre-wrap break-all">{error}</p>
             </div>
           </div>
         </div>

@@ -158,7 +158,7 @@ const App: React.FC = () => {
     setCurrentDiagramId(id);
     forceSave(code, title, true);
 
-    // Also persist to file system if we have a currentFileId
+    // Update or create file system item
     if (currentFileId) {
       setFiles(prev => {
         const updated = prev.map(f =>
@@ -168,6 +168,18 @@ const App: React.FC = () => {
         if (file) saveFile(file);
         return updated;
       });
+    } else {
+      const newFile: DiagramFile = {
+        id,
+        type: 'file',
+        name: title,
+        code,
+        folderId: null,
+        lastModified: Date.now(),
+      };
+      saveFile(newFile);
+      setFiles(getFiles());
+      setCurrentFileId(id);
     }
   };
 
@@ -224,6 +236,17 @@ const App: React.FC = () => {
     }
   }, [currentFileId]);
 
+  const handleMoveFile = useCallback((fileId: string, targetFolderId: string | null) => {
+    setFiles(prev => {
+      const updated = prev.map(f =>
+        f.id === fileId ? { ...f, folderId: targetFolderId, lastModified: Date.now() } : f
+      );
+      const file = updated.find(f => f.id === fileId);
+      if (file) saveFile(file);
+      return updated;
+    });
+  }, []);
+
   // ── Sidebar: folder operations ────────────────────────────────────────────
   const handleCreateFolder = useCallback(() => {
     const newFolder: DiagramFolder = {
@@ -268,6 +291,7 @@ const App: React.FC = () => {
         onCreateFolder={handleCreateFolder}
         onDeleteFolder={handleDeleteFolder}
         onRenameFolder={handleRenameFolder}
+        onMoveFile={handleMoveFile}
       />
 
       {/* Header/Nav for Mobile only */}

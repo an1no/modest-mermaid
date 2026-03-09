@@ -39,8 +39,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                         onClick={() => setIsOpen(!isOpen)}
                         className={`p-2 rounded-full transition-colors border border-transparent 
                             ${isOpen
-                                ? 'bg-slate-800 text-indigo-400 border-slate-700'
-                                : 'hover:bg-slate-800 text-slate-400 hover:text-indigo-400 hover:border-slate-700'
+                                ? 'bg-[#FFFFFF] text-[#086788] border-[#FFFFFF]'
+                                : 'hover:bg-[#FFFFFF] text-[#4A5568]/60 hover:text-[#07A0C3] hover:border-[#FFFFFF]'
                             }`}
                     >
                         <Palette size={18} />
@@ -48,7 +48,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                 </Tooltip>
 
                 {isOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-48 py-1 rounded-lg shadow-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 block z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 w-48 py-1 rounded-lg shadow-xl bg-[#F7FAFC] border border-[#FFFFFF] block z-50 overflow-hidden">
                         {Object.values(themes).map((theme) => (
                             <button
                                 key={theme.id}
@@ -58,13 +58,13 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                                 }}
                                 className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2
                   ${currentTheme === theme.id
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
-                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        ? 'bg-[#086788]/10 text-[#086788] font-medium'
+                                        : 'text-[#4A5568] hover:bg-[#FFFFFF]'
                                     }
                 `}
                             >
-                                <div className={`w-3 h-3 rounded-full border border-slate-300 dark:border-slate-600 ${theme.id === 'sketch' ? 'bg-[#fdfbf7]' :
-                                        'bg-white' // Notion
+                                <div className={`w-3 h-3 rounded-full border border-[#FFFFFF] ${theme.id === 'sketch' ? 'bg-[#fdfbf7]' :
+                                    'bg-[#FFFFFF]' // Ocean
                                     }`} />
                                 <span>{theme.name}</span>
                                 {currentTheme === theme.id && (
