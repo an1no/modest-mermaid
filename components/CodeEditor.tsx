@@ -110,7 +110,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
               className="bg-transparent border-none text-sm font-semibold opacity-90 tracking-wider w-full focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1 -ml-1 placeholder-white/20"
-              placeholder="UNTITLED DIAGRAM"
+              placeholder="Untitled Diagram"
             />
           ) : (
             <h2 className="text-sm font-semibold opacity-90 tracking-wider">Editor</h2>
@@ -147,7 +147,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               {showHistory && (
                 <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
                   <div className="p-2 border-b border-slate-700 bg-slate-900/50">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">History Snapshots</h3>
+                    <h3 className="text-xs font-semibold text-slate-400 tracking-wider">History Snapshots</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {history.map((item) => {
