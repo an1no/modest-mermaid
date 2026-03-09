@@ -100,13 +100,16 @@ export const useHistory = (currentCode: string, currentTitle: string = 'Untitled
         });
     }, []);
 
-    const forceSave = useCallback((code: string, title: string) => {
+    const forceSave = useCallback((code: string, title: string, force: boolean = false) => {
         if (!code.trim()) return;
 
         setHistory((prev) => {
             const cleanCode = code.trim();
 
-            if (prev.length > 0 && prev[0].code.trim() === cleanCode && prev[0].label === title) {
+            // Deduplication guard: skip if the latest snapshot is already identical.
+            // Bypassed for manual saves (force=true) so clicking Save always writes
+            // a fresh entry with the current timestamp, even if code hasn't changed.
+            if (!force && prev.length > 0 && prev[0].code.trim() === cleanCode && prev[0].label === title) {
                 return prev;
             }
 
