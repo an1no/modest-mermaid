@@ -87,6 +87,49 @@ const App: React.FC = () => {
   const [files, setFiles] = useState<DiagramFile[]>([]);
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
 
+  // ── Resizable editor pane (desktop only, persisted) ──────────────────────────
+  const MIN_EDITOR_PCT = 20;
+  const MAX_EDITOR_PCT = 70;
+  const [editorWidth, setEditorWidth] = useState<number>(() => {
+    const stored = parseFloat(localStorage.getItem('editorWidth') || '');
+    if (!isNaN(stored)) return Math.min(MAX_EDITOR_PCT, Math.max(MIN_EDITOR_PCT, stored));
+    return 40; // matches the original lg:w-2/5
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Track whether the panes are side-by-side (md breakpoint = 768px)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const onMove = (e: MouseEvent) => {
+      const pct = (e.clientX / window.innerWidth) * 100;
+      setEditorWidth(Math.min(MAX_EDITOR_PCT, Math.max(MIN_EDITOR_PCT, pct)));
+    };
+    const onUp = () => setIsResizing(false);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isResizing]);
+
+  useEffect(() => {
+    localStorage.setItem('editorWidth', String(editorWidth));
+  }, [editorWidth]);
+
   const activeTheme = themes[currentThemeId];
   const { history: historyItems, lastSaved, deleteSnapshot, forceSave } = useHistory(code, title, isDirty);
 
@@ -304,7 +347,10 @@ const App: React.FC = () => {
       </div>
 
       {/* Editor Pane */}
-      <div className={`w-full md:w-1/2 lg:w-2/5 h-1/2 md:h-full border-b md:border-b-0 md:border-r ${activeTheme.ui.borderColor} shadow-xl z-20 flex flex-col`}>
+      <div
+        style={isDesktop ? { width: `${editorWidth}%` } : undefined}
+        className={`w-full md:shrink-0 h-1/2 md:h-full border-b md:border-b-0 md:border-r ${activeTheme.ui.borderColor} shadow-xl z-20 flex flex-col ${isResizing ? '' : 'md:transition-[width] md:duration-150'}`}
+      >
         <div className="flex-1 min-h-0 relative">
           <CodeEditor
             title={title}
@@ -331,8 +377,18 @@ const App: React.FC = () => {
         </div>
       </div>
 
+      {/* Resize handle (desktop only) */}
+      <div
+        onMouseDown={(e) => { e.preventDefault(); setIsResizing(true); }}
+        onDoubleClick={() => setEditorWidth(40)}
+        title="Drag to resize · double-click to reset"
+        className={`hidden md:block shrink-0 w-1.5 z-20 cursor-col-resize group ${isResizing ? 'bg-[#086788]/40' : 'hover:bg-[#086788]/20'} transition-colors`}
+      >
+        <div className={`h-full w-px mx-auto ${isResizing ? 'bg-[#086788]' : 'bg-transparent group-hover:bg-[#086788]/40'}`} />
+      </div>
+
       {/* Viewer Pane */}
-      <div className="w-full md:w-1/2 lg:w-3/5 h-1/2 md:h-full relative">
+      <div className="w-full md:flex-1 h-1/2 md:h-full relative">
         <div className="absolute top-4 right-4 z-20 hidden md:block">
           <ThemeSelector currentTheme={currentThemeId} onThemeChange={setCurrentThemeId} />
         </div>
